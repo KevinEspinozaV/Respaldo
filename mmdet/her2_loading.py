@@ -45,7 +45,7 @@ class LoadHer2FromFile(object):
             img = np.stack([np.random.randn(img.shape[0], img.shape[1])*self.bkg_stat['std'][i] + self.bkg_stat['mean'][i] for i in range(self.output_ch)], axis=-1).astype(np.float32)
             gt_labels = np.zeros((1, self.num_classes), dtype=np.int64)
         else:
-            labels = [results['ann_info'][key] for key in self.keep_labels]
+            labels = [results["img_info"]['ann'][key] for key in self.keep_labels]
             gt_labels = np.zeros((1, self.num_classes), dtype=np.int64)
             base_idx = 0
             for ix, l in enumerate(labels):

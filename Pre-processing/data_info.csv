@@ -1,2 +1,0 @@
-slide_fn,slide_bn,annos,lbls
-Dataset/3a95c331cff7edc64e42064abbca422521e0b688.mrxs,3a95c331cff7edc64e42064abbca422521e0b688,"[{'type': 'Feature', 'geometry': {'type': 'Polygon', 'coordinates': [[[500, 43623], [500, 43942], [696, 43942], [696, 43623], [500, 43623]]]}, 'properties': {'object_type': 'annotation', 'name': 'EXCLUDE', 'color': [255, 0, 0], 'isLocked': False}}]","{'ihc': 3, 'fish': 1}"

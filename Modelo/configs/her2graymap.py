@@ -42,7 +42,7 @@ train_pipeline = [
 ]
 test_pipeline = [
     dict(type='LoadHer2FromFile', keep_labels=keep_labels, label_dims=label_dims, with_image=True),
-    dict(type='CenterCropWithPad', crop_size=(512, 512)),
+    dict(type='RandomCrop', crop_size=(512, 512)), # CenterCropWithPad
     dict(type='DefaultFormatBundle'),
     dict(type='Collect', keys=['img', 'gt_labels'],
          meta_keys=['filename'])
@@ -53,8 +53,8 @@ data = dict(
     workers_per_gpu=4,
     train=dict(
         type=dataset_type,
-        ann_file=data_root + '/data_info.csv',
-        img_prefix=data_root,
+        ann_file=data_root + '/Train_3/train_3.csv',
+        img_prefix=data_root + '/Train_3',
         fold=-1, # fold=fold
         keep_labels=keep_labels,
         label_dims=label_dims,
@@ -62,19 +62,19 @@ data = dict(
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + '/data_info.csv',
+        ann_file=data_root + '/Train_3/train_3.csv',
         keep_labels=keep_labels,
         label_dims=label_dims,
         uniform_sampling=False,
-        img_prefix=data_root,
+        img_prefix=data_root + '/Train_3',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + '/data_info.csv',
+        ann_file=data_root + '/Test_3/test_3.csv',
         keep_labels=keep_labels,
         label_dims=label_dims,
         uniform_sampling=False,
-        img_prefix=data_root,
+        img_prefix=data_root + '/Test_3',
         pipeline=test_pipeline))
 # optimizer
 # optimizer = dict(type='SGD', lr=0.001, momentum=0.9, weight_decay=0.000001)
@@ -96,13 +96,13 @@ log_config = dict(
         dict(type='TextLoggerHook')
     ])
 # runtime settings
-total_epochs = 200
+total_epochs = 100
 device = 'cuda' # Agregue este parametro
 device_ids = range(8)
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = f'./work_dirs/her2classification'
-load_from = None # f'./work_dirs/her2classification/latest.pth'
+load_from = None #f'./work_dirs/her2classification/latest.pth'
 resume_from = None
 workflow = [('train', 1), ('val', 1)]
 evaluation = dict(interval=1, metric='her2_accuracy')
