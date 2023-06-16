@@ -160,10 +160,11 @@ def main():
         dist=distributed,
         shuffle=False)
     
-    '''with open('resultados.txt', 'w') as f:
+    '''with open('data_loader.txt', 'w') as f:
         for data in data_loader:
             f.write(str(data))
-    f.close()'''
+    f.close()
+    sys.exit()'''
 
     # build the model and load checkpoint
     model = build_detector(cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
@@ -198,7 +199,6 @@ def main():
                                  args.gpu_collect)
 
     # outputs: son las salidas por cada parche
-
     rank, _ = get_dist_info()
     if rank == 0:
         if args.out:
@@ -246,7 +246,7 @@ def dict_patches(data_loader):
     return dict_numpatches # Retorno el diccionario: {"WSI_1": 234, "WSI_2": 256, ... "WSI_X: XX"}
 
 # Calculo la cantidad de votos que tiene en cada calificación; fish e ihc
-# input: los resultados obtenidos del test y dict con la ctdad de parches por wsi (dict_numpatches)
+# input: los resultados obtenidos del test y dict con la cantidad de parches por wsi (dict_numpatches)
 # output: voto por cada WSI obtenido tanto para fish (0,1) e ihc (0,1,2,3)
 def calculoEtiqueta(outputs, dict_numpatches):
     # Definición de varibles
@@ -318,12 +318,12 @@ def calculoEtiqueta(outputs, dict_numpatches):
                 cont_ihc_2 = 0 # Acumulador de ihc 2
                 cont_ihc_3 = 0 # Acumulador de ihc 3
 
-    return list_outputs # [[[123 4], [110 14 3 0], ...]
+    return list_outputs # [[[123 4], [110 14 3 0]], ...]
 
 # Determinar la calificación final obtenida por el modelo
 # input: list_ouputs y dict_numpatches
 # output: Lista con el nombre y la calificación ihc y fish de cada WSI
-def calificacion_final(list_ouputs,dict_numpatches):
+def calificacion_final_max(list_ouputs,dict_numpatches):
 
     finalOutput = [] # Defino una lista vacia donde guardaré los resultados finales
 
@@ -430,24 +430,22 @@ def crearMatrizConfusion(list_score_original, finalOutput):
 
     # creamos la matriz de confusión
     #confusionFish = confusion_matrix(list_true_fish, list_pred_fish)
-    #confusionIhc = confusion_matrix(list_true_ihc, list_pred_ihc)
-   
+    confusionIhc = confusion_matrix(list_true_ihc, list_pred_ihc)
+    print(confusionIhc)
+    
     # Calculo del acc
     accFish = accuracy_score(list_true_fish, list_pred_fish)
     accIhc = accuracy_score(list_true_ihc, list_pred_ihc)
 
     return accFish, accIhc
 
-if __name__ == '__main__':
-
-    data_loader, outputs = main()
-    
-    # CALCULAR SALIDAS 
+def funcion_agregacion_max(data_loader, num_test):
 
     list_dict = dict_patches(data_loader)
-    list_original = calificacion_original(list_dict, num_test=3)
+    list_original = calificacion_original(list_dict, num_test)
     list_outputs = calculoEtiqueta(outputs,list_dict)
-    list_outputs = calificacion_final(list_outputs,list_dict)
+    #print(list_outputs)
+    list_outputs = calificacion_final_max(list_outputs,list_dict)
 
     print("-" * 100)
     print("Calificación Original: ", list_original)
@@ -458,3 +456,94 @@ if __name__ == '__main__':
     accFish, accIhc = crearMatrizConfusion(list_original,list_outputs)
     print("Acc fish: ", accFish)
     print("Acc ihc: ", accIhc)
+
+def calificacion_final_prom(list_outputs, dict_numpatches):
+
+    list_prom = []
+
+    for wsi in list_outputs:
+
+        total_fish = sum(wsi[1])
+        prom_fish_0 = wsi[0][0]/total_fish
+        prom_fish_1 = wsi[0][1]/total_fish
+
+        total_ihc = sum(wsi[1])
+        prom_ihc_0 = wsi[1][0]/total_ihc
+        prom_ihc_1 = wsi[1][1]/total_ihc
+        prom_ihc_2 = wsi[1][2]/total_ihc
+        prom_ihc_3 = wsi[1][3]/total_ihc
+        list_prom.append([[prom_fish_0, prom_fish_1],[prom_ihc_0,prom_ihc_1,prom_ihc_2,prom_ihc_3]])
+    
+    #print("list prom: ", list_prom)
+
+    finalOutput = []
+
+    for element in list_prom: # Por cada elemento capturado en list_outputs 
+        
+        max_fish = max(element[0]) # Saca el maximo de fish
+        max_ihc = max(element[1]) # Saca el maximo de ihc
+        posicion_fish = element[0].index(max_fish) # Determina en que posición. POS 0 = fish 0, POS 1 = fish 1
+        posicion_ihc = element[1].index(max_ihc) # Determina en que posición. POS 0 = ihc 0, POS 1 = ihc 1, POS 2 = ihc 2, POS 3 = ihc 3
+
+        # Reviso el fish
+        if posicion_fish == 1:
+            fish_output = 1
+        else:
+            fish_output = 0
+
+        # Reviso el ihc
+        if posicion_ihc == 0:
+            ihc_output = 0
+        elif posicion_ihc == 1:
+            ihc_output = 1
+        elif posicion_ihc == 2:
+            ihc_output = 2
+        else:
+            ihc_output = 3
+
+        finalOutput.append([ihc_output, fish_output]) # Agrego el resultado con mayor votación
+
+    lista_name_slide = list(dict_numpatches.keys()) # obtengo los nombres de cada WSI analizada
+
+    finalOutPutReal = []
+    i = 0
+    while i < len(finalOutput):
+        listaAux = []
+        listaAux.append(lista_name_slide[i][-7:]) # Agrego a listAux el nombre
+        listaAux.append(finalOutput[i][0]) # Agrego a listAux el ihc
+        listaAux.append(finalOutput[i][1]) # Agrego a listAux el fish
+        finalOutPutReal.append(listaAux) # Agrego la listaAux
+        i = i + 1
+
+    return finalOutPutReal # [[name, ihc, fish],[name, ihc, fish], [name, ihc, fish], ... [name, ihc, fish]]
+
+
+def funcion_agregacion_prom(data_loader, num_test):
+
+    list_dict = dict_patches(data_loader)
+    list_original = calificacion_original(list_dict, num_test)
+    list_outputs = calculoEtiqueta(outputs,list_dict)
+    list_outputs = calificacion_final_prom(list_outputs,list_dict)
+
+    print("-" * 100)
+    print("Calificación Original: ", list_original)
+    print("-" * 100)
+    print("Califiación Predecida: ", list_outputs)
+    print("\n\n")
+
+    accFish, accIhc = crearMatrizConfusion(list_original,list_outputs)
+    print("Acc fish: ", accFish)
+    print("Acc ihc: ", accIhc)
+
+
+if __name__ == '__main__':
+
+    data_loader, outputs = main()
+    
+    # CALCULAR SALIDAS 
+
+    # Funcion de agregacion 1
+    funcion_agregacion_max(data_loader, num_test=1)
+
+    # Funcion de agregacion 2
+    # funcion_agregacion_prom(data_loader, num_test=1)

@@ -49,12 +49,12 @@ test_pipeline = [
 ]
 
 data = dict(
-    samples_per_gpu=32,
+    samples_per_gpu=32, # Batch_size
     workers_per_gpu=4,
     train=dict(
         type=dataset_type,
-        ann_file=data_root + '/Train_3/train_3.csv',
-        img_prefix=data_root + '/Train_3',
+        ann_file=data_root + '/Train_1/train_1.csv',
+        img_prefix=data_root + '/Train_1',
         fold=-1, # fold=fold
         keep_labels=keep_labels,
         label_dims=label_dims,
@@ -62,19 +62,19 @@ data = dict(
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + '/Train_3/train_3.csv',
+        ann_file=data_root + '/Val_1/val_1.csv',
         keep_labels=keep_labels,
         label_dims=label_dims,
         uniform_sampling=False,
-        img_prefix=data_root + '/Train_3',
+        img_prefix=data_root + '/Val_1',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + '/Test_3/test_3.csv',
+        ann_file=data_root + '/Test_1/test_1.csv',
         keep_labels=keep_labels,
         label_dims=label_dims,
         uniform_sampling=False,
-        img_prefix=data_root + '/Test_3',
+        img_prefix=data_root + '/Test_1',
         pipeline=test_pipeline))
 # optimizer
 # optimizer = dict(type='SGD', lr=0.001, momentum=0.9, weight_decay=0.000001)
