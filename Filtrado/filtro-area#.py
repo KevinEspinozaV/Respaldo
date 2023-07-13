@@ -345,7 +345,7 @@ def calculo_media_porcentaje(lista_porcentajes):
 
     return
 
-def calculo_num_parches(ruta_carpetas,calificacion):
+def calculo_num_parches(ruta_carpetas):
 
     # Calculo de numero de parches
     i = 0
@@ -490,7 +490,7 @@ calificacion_wsi = [1, 1, 2, 2, 3, 0, 3, 1, 3, 1, 3, 2, 3, 0, 2, 0, 1, 2, 2, 0, 
 calificacion = obtener_calificacion_wsi(ruta_carpetas, name_wsi, calificacion_wsi)
 
 # Antes de filtrar, total de parches:
-list_num_parches_ini = calculo_num_parches(ruta_carpetas,calificacion)
+list_num_parches_ini = calculo_num_parches(ruta_carpetas)
 
 # Inicio el ciclo de filtrado
 i = 0
@@ -507,7 +507,7 @@ for carpeta in ruta_carpetas:
     i = i + 1
 
 #Despues de filtrar, total de parches
-list_num_parches_fin = calculo_num_parches(ruta_carpetas,calificacion)
+list_num_parches_fin = calculo_num_parches(ruta_carpetas)
 
 # Obtengo las nuevos parches que quedan
 list_nombres_parches = aplanar_lista(list_nombres_parches)
@@ -547,5 +547,5 @@ print("Despues de filtrar, total de parches: ")
 print(list_num_parches_fin)
 
 print("Despues de aumento de datos, total de parches: ")
-list_num_parches_fin_2 = calculo_num_parches(ruta_carpetas,calificacion)
+list_num_parches_fin_2 = calculo_num_parches(ruta_carpetas)
 print(list_num_parches_fin_2)
