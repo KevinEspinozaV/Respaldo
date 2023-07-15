@@ -17,7 +17,7 @@ from mmdet.datasets import (build_dataloader, build_dataset,
                             replace_ImageToTensor)
 from mmdet.models import build_detector
 
-from sklearn.metrics import confusion_matrix, accuracy_score
+from sklearn.metrics import confusion_matrix, accuracy_score, recall_score, f1_score, cohen_kappa_score, precision_score
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -245,6 +245,64 @@ def dict_patches(data_loader):
 
     return dict_numpatches # Retorno el diccionario: {"WSI_1": 234, "WSI_2": 256, ... "WSI_X: XX"}
 
+def calculoAverage(outputs, dict_numpatches):
+
+    cont_fish_0 = 0 # Acumulador de fish 0
+    cont_fish_1 = 0 # Acumulador de fish 1
+
+    cont_ihc_0 = 0 # Acumulador de ihc 0
+    cont_ihc_1 = 0 # Acumulador de ihc 1
+    cont_ihc_2 = 0 # Acumulador de ihc 2
+    cont_ihc_3 = 0 # Acumulador de ihc 3
+
+    listaNumpatches = list(dict_numpatches.values())
+    listaNumpatchesAux = listaNumpatches
+    
+    # Multiplico x2 cada elemento debido a que cada parche tiene calificación fish e ihc
+    for i in range(len(listaNumpatches)):
+        listaNumpatches[i] *= 2
+
+    # Obtener el acumulado de la lista
+    listaNumpatches = list(accumulate(listaNumpatches))
+
+    list_outputs = []
+    # Se recorre todo el resultado
+    for i in range(len(outputs)):
+        if i % 2 == 0:  # si el índice es par, es decir la calificación fish
+
+            pre_fish = outputs[i].tolist() # convierte el tensor a una lista de Python
+            lista_fish = pre_fish[0] # Accede a la lista
+            cont_fish_0 = cont_fish_0 + lista_fish[0]
+            cont_fish_1 = cont_fish_1 + lista_fish[1]
+            
+        else:  # si el índice es impar, es decir, la calificación ihc
+            
+            pre_ihc = outputs[i].tolist() # convierte el tensor a una lista de Python
+            lista_ihc = pre_ihc[0] # Accede a la lista
+            cont_ihc_0 = cont_ihc_0 + lista_ihc[0]
+            cont_ihc_1 = cont_ihc_1 + lista_ihc[1]
+            cont_ihc_2 = cont_ihc_2 + lista_ihc[2]
+            cont_ihc_3 = cont_ihc_3 + lista_ihc[3]
+            
+        for j in range(len(listaNumpatches)):
+            if listaNumpatches[j]-1  == i: # gracias a la lista acumulada, puedo saber hasta que punto de los outputs entregados por el modelo corresponde a cada WSI
+                
+                largo = listaNumpatchesAux[j]/2
+                cont_fish = [cont_fish_0/largo, cont_fish_1/largo] # Agrego el contador fish por cada voto obtenido
+                cont_ihc = [cont_ihc_0/largo, cont_ihc_1/largo, cont_ihc_2/largo, cont_ihc_3/largo] # Agrego el contador ihc por cada voto obtenido
+                list_outputs.append([cont_fish,cont_ihc]) # Agrego ambos resultados en una sola lista
+
+                # Reiniciamos variables
+                cont_fish_0 = 0 # Acumulador de fish 0
+                cont_fish_1 = 0 # Acumulador de fish 1
+
+                cont_ihc_0 = 0 # Acumulador de ihc 0
+                cont_ihc_1 = 0 # Acumulador de ihc 1
+                cont_ihc_2 = 0 # Acumulador de ihc 2
+                cont_ihc_3 = 0 # Acumulador de ihc 3
+
+    return list_outputs
+
 # Calculo la cantidad de votos que tiene en cada calificación; fish e ihc
 # input: los resultados obtenidos del test y dict con la cantidad de parches por wsi (dict_numpatches)
 # output: voto por cada WSI obtenido tanto para fish (0,1) e ihc (0,1,2,3)
@@ -436,8 +494,12 @@ def crearMatrizConfusion(list_score_original, finalOutput):
     # Calculo del acc
     accFish = accuracy_score(list_true_fish, list_pred_fish)
     accIhc = accuracy_score(list_true_ihc, list_pred_ihc)
+    recallIhc = recall_score(list_true_ihc, list_pred_ihc,average='macro')
+    f1Ihc = f1_score(list_true_ihc, list_pred_ihc,average='macro')
+    kappaIhc = cohen_kappa_score(list_true_ihc, list_pred_ihc)
+    precIhc = precision_score(list_true_fish, list_pred_fish, average='macro')
 
-    return accFish, accIhc
+    return accFish, accIhc, recallIhc, f1Ihc, kappaIhc, precIhc
 
 def funcion_agregacion_max(data_loader, num_test):
 
@@ -453,32 +515,19 @@ def funcion_agregacion_max(data_loader, num_test):
     print("Califiación Predecida: ", list_outputs)
     print("\n\n")
 
-    accFish, accIhc = crearMatrizConfusion(list_original,list_outputs)
+    accFish, accIhc, recallIhc, f1Ihc, kappaIhc, precIhc = crearMatrizConfusion(list_original,list_outputs)
     print("Acc fish: ", accFish)
     print("Acc ihc: ", accIhc)
+    print("Re-Call ihc: ", recallIhc)
+    print("F1-Score ihc: ", f1Ihc)
+    print("Kappa ihc: ", kappaIhc)
+    print("Prec ihc: ", precIhc)
 
-def calificacion_final_prom(list_outputs, dict_numpatches):
+def calificacion_final_prom(list_ouputs, dict_numpatches):
 
-    list_prom = []
+    finalOutput = [] # Defino una lista vacia donde guardaré los resultados finales
 
-    for wsi in list_outputs:
-
-        total_fish = sum(wsi[1])
-        prom_fish_0 = wsi[0][0]/total_fish
-        prom_fish_1 = wsi[0][1]/total_fish
-
-        total_ihc = sum(wsi[1])
-        prom_ihc_0 = wsi[1][0]/total_ihc
-        prom_ihc_1 = wsi[1][1]/total_ihc
-        prom_ihc_2 = wsi[1][2]/total_ihc
-        prom_ihc_3 = wsi[1][3]/total_ihc
-        list_prom.append([[prom_fish_0, prom_fish_1],[prom_ihc_0,prom_ihc_1,prom_ihc_2,prom_ihc_3]])
-    
-    #print("list prom: ", list_prom)
-
-    finalOutput = []
-
-    for element in list_prom: # Por cada elemento capturado en list_outputs 
+    for element in list_ouputs: # Por cada elemento capturado en list_outputs 
         
         max_fish = max(element[0]) # Saca el maximo de fish
         max_ihc = max(element[1]) # Saca el maximo de ihc
@@ -522,8 +571,8 @@ def funcion_agregacion_prom(data_loader, num_test):
 
     list_dict = dict_patches(data_loader)
     list_original = calificacion_original(list_dict, num_test)
-    list_outputs = calculoEtiqueta(outputs,list_dict)
-    list_outputs = calificacion_final_prom(list_outputs,list_dict)
+    list_outputs = calculoAverage(outputs,list_dict)
+    list_outputs = calificacion_final_prom(list_outputs, list_dict)
 
     print("-" * 100)
     print("Calificación Original: ", list_original)
@@ -531,10 +580,13 @@ def funcion_agregacion_prom(data_loader, num_test):
     print("Califiación Predecida: ", list_outputs)
     print("\n\n")
 
-    accFish, accIhc = crearMatrizConfusion(list_original,list_outputs)
+    accFish, accIhc, recallIhc, f1Ihc, kappaIhc, precIhc = crearMatrizConfusion(list_original,list_outputs)
     print("Acc fish: ", accFish)
     print("Acc ihc: ", accIhc)
-
+    print("Re-Call ihc: ", recallIhc)
+    print("F1-Score ihc: ", f1Ihc)
+    print("Kappa ihc: ", kappaIhc)
+    print("Prec ihc: ", precIhc)
 
 if __name__ == '__main__':
 
@@ -543,7 +595,7 @@ if __name__ == '__main__':
     # CALCULAR SALIDAS 
 
     # Funcion de agregacion 1
-    funcion_agregacion_max(data_loader, num_test=1)
+    funcion_agregacion_max(data_loader, num_test=4)
 
     # Funcion de agregacion 2
-    # funcion_agregacion_prom(data_loader, num_test=1)
+    funcion_agregacion_prom(data_loader, num_test=4)
