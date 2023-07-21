@@ -210,7 +210,7 @@ def calculo_num_parches(ruta_carpetas,calificacion):
     i = 0
     num_parche = []
     for carpeta in ruta_carpetas:
-        ruta_parches = cargar_parches("/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_4/"+str(carpeta))
+        ruta_parches = cargar_parches("/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5/"+str(carpeta))
         num_parche.append(len(ruta_parches))
         i = i + 1
 
@@ -303,8 +303,8 @@ def rotacionImagenes(parche,carpeta,angulo_rotacion,archivo_csv, calificacion):
     name_patch = name_patch.split("/")
     name_patch = name_patch[-1]
     name_patch = name_patch[:-3]
-    ruta_png = '/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_4/'+carpeta+'/'+name_patch+'r'+str(angulo_rotacion)+'.png'
-    ruta_pkl = '/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_4/'+carpeta+'/'+name_patch+'r'+str(angulo_rotacion)+'.pkl'
+    ruta_png = '/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5/'+carpeta+'/'+name_patch+'r'+str(angulo_rotacion)+'.png'
+    ruta_pkl = '/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5/'+carpeta+'/'+name_patch+'r'+str(angulo_rotacion)+'.pkl'
     try:
         if not os.path.exists(ruta_png):
             cv2.imwrite(ruta_png,imagen_rotada)
@@ -345,7 +345,7 @@ def escribir_csv(archivo_csv,nuevos_datos):
 # ---------------------------------------------------------------------------------------------------------------
 
 # Obtengo las carpetas
-ruta_carpetas = cargar_carpetas("/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_4")
+ruta_carpetas = cargar_carpetas("/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5")
 
 # Calificacion IHC de cada carpeta (revisar orden de las carpetas)
 name_wsi = [12, 14, 25, 26, 27, 29, 30, 32, 33, 34, 35, 36, 38, 39, 40, 46, 47, 49, 50, 52, 55, 57, 61, 63, 64, 66, 67, 68, 70, 73, 74, 79, 82, 83, 84, 86, 87, 88]
@@ -359,15 +359,38 @@ list_num_parches_ini = calculo_num_parches(ruta_carpetas,calificacion)
 i = 0
 list_nombres_parches = []
 cont_parches_total = 0
+
+cont_0 = 0
+cont_1 = 0
+cont_2 = 0
+cont_3 = 0
 for carpeta in ruta_carpetas:
     print(f"Analizando {carpeta} que tiene calificacion {calificacion[i]} ...")
-    ruta_parches = cargar_parches("/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_4/"+str(carpeta))
+    ruta_parches = cargar_parches("/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5/"+str(carpeta))
     list_calificacion = calculo_porcentaje_tincion(ruta_parches)
     cont, list_nombres_parches_aux = filtrado_parches(ruta_parches, calificacion[i], list_calificacion)
     list_nombres_parches.append(list_nombres_parches_aux)
     print(f"Borre {cont} parches de un total de {len(ruta_parches)}. Total: {len(ruta_parches)-cont}")
     cont_parches_total = cont_parches_total + len(ruta_parches)
+
+    if calificacion[i] == 0:
+        cont_0 = cont_0 + cont
+    elif calificacion[i] == 1:
+        cont_1 = cont_1 + cont
+    elif calificacion[i] == 2:
+        cont_2 = cont_2 + cont
+    else:
+        cont_3 = cont_3 + cont
+
     i = i + 1
+
+
+list_parches_cont = [cont_0,cont_1,cont_2,cont_3]
+
+print("\n\n")
+print("Total Parches ",cont_parches_total)
+print("Total Borrados ",sum(list_parches_cont))
+print("Borrados por clase ", list_parches_cont)
 
 #Despues de filtrar, total de parches
 list_num_parches_fin = calculo_num_parches(ruta_carpetas,calificacion)
@@ -377,20 +400,20 @@ list_nombres_parches = aplanar_lista(list_nombres_parches)
 list_nombres = sacar_nombre_parche(list_nombres_parches)
 
 print("\n\nEstoy borrando los elementos del csv...")
-ruta_csv = "/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_4/train_4.csv"
+ruta_csv = "/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5/train_5.csv"
 borrar_elementos(list_nombres, ruta_csv)
 print("Elementos borrados.\n\n")
 
 list_dif = calculo_diferencia(list_num_parches_ini,list_num_parches_fin)
 
-ruta_csv_nuevo = "/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_4/train_4_filtrado.csv"
+ruta_csv_nuevo = "/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5/train_5_filtrado.csv"
 i = 0
 while i < len(list_dif): # Recorro la lista de dif
     if list_dif[i] != 0:
         print(f"Aumentando datos en la carpeta {ruta_carpetas[i]}")
         cont = 0
         while cont < list_dif[i]:
-            ruta_parches = cargar_parches("/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_4/"+str(ruta_carpetas[i]))
+            ruta_parches = cargar_parches("/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5/"+str(ruta_carpetas[i]))
             parche_aleatorio = random.choice(ruta_parches)
             lista_angulos = [0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345, 360]
             angulo_aleatorio = random.choice(lista_angulos)

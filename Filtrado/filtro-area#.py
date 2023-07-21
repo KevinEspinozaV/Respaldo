@@ -496,6 +496,11 @@ list_num_parches_ini = calculo_num_parches(ruta_carpetas)
 i = 0
 list_nombres_parches = []
 cont_parches_total = 0
+
+cont_0 = 0
+cont_1 = 0
+cont_2 = 0
+cont_3 = 0
 for carpeta in ruta_carpetas:
     print(f"Analizando {carpeta} que tiene calificacion {calificacion[i]} ...")
     ruta_parches = cargar_parches("/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5/"+str(carpeta))
@@ -504,7 +509,25 @@ for carpeta in ruta_carpetas:
     list_nombres_parches.append(list_nombres_parches_aux)
     print(f"Borre {cont} parches de un total de {len(ruta_parches)}. Total: {len(ruta_parches)-cont}")
     cont_parches_total = cont_parches_total + len(ruta_parches)
+
+    if calificacion[i] == 0:
+        cont_0 = cont_0 + cont
+    elif calificacion[i] == 1:
+        cont_1 = cont_1 + cont
+    elif calificacion[i] == 2:
+        cont_2 = cont_2 + cont
+    else:
+        cont_3 = cont_3 + cont
+
     i = i + 1
+
+list_parches_cont = [cont_0,cont_1,cont_2,cont_3]
+
+print("\n\n")
+print("Total Parches ",cont_parches_total)
+print("Total Borrados ",sum(list_parches_cont))
+print("Borrados por clase ", list_parches_cont)
+
 
 #Despues de filtrar, total de parches
 list_num_parches_fin = calculo_num_parches(ruta_carpetas)
