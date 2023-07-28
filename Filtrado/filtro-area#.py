@@ -351,7 +351,7 @@ def calculo_num_parches(ruta_carpetas):
     i = 0
     num_parche = []
     for carpeta in ruta_carpetas:
-        ruta_parches = cargar_parches("/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5/"+str(carpeta))
+        ruta_parches = cargar_parches("/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_0/"+str(carpeta))
         num_parche.append(len(ruta_parches))
         i = i + 1
 
@@ -398,8 +398,8 @@ def flippingImagenes(parche,direccion,archivo_csv,calificacion):
     name_patch = name_patch.split("/")
     name_patch = name_patch[-1]
     name_patch = name_patch[:-3]
-    ruta_png = '/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5/'+carpeta+'/'+name_patch+'fp'+str(direccion)+'.png'
-    ruta_pkl = '/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5/'+carpeta+'/'+name_patch+'fp'+str(direccion)+'.pkl'
+    ruta_png = '/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_0/'+carpeta+'/'+name_patch+'fp'+str(direccion)+'.png'
+    ruta_pkl = '/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_0/'+carpeta+'/'+name_patch+'fp'+str(direccion)+'.pkl'
     try:
         if not os.path.exists(ruta_png):
             cv2.imwrite(ruta_png,img_flip)
@@ -439,8 +439,8 @@ def rotacionImagenes(parche,carpeta,angulo_rotacion,archivo_csv, calificacion):
     name_patch = name_patch.split("/")
     name_patch = name_patch[-1]
     name_patch = name_patch[:-3]
-    ruta_png = '/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5/'+carpeta+'/'+name_patch+'r'+str(angulo_rotacion)+'.png'
-    ruta_pkl = '/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5/'+carpeta+'/'+name_patch+'r'+str(angulo_rotacion)+'.pkl'
+    ruta_png = '/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_0/'+carpeta+'/'+name_patch+'r'+str(angulo_rotacion)+'.png'
+    ruta_pkl = '/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_0/'+carpeta+'/'+name_patch+'r'+str(angulo_rotacion)+'.pkl'
     try:
         if not os.path.exists(ruta_png):
             cv2.imwrite(ruta_png,imagen_rotada)
@@ -481,7 +481,7 @@ def escribir_csv(archivo_csv,nuevos_datos):
 # ---------------------------------------------------------------------------------------------------------------
 
 # Obtengo las carpetas
-ruta = "/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5"
+ruta = "/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_0"
 ruta_carpetas = cargar_carpetas(ruta)
 
 # Calificacion IHC de cada carpeta (revisar orden de las carpetas)
@@ -503,7 +503,7 @@ cont_2 = 0
 cont_3 = 0
 for carpeta in ruta_carpetas:
     print(f"Analizando {carpeta} que tiene calificacion {calificacion[i]} ...")
-    ruta_parches = cargar_parches("/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5/"+str(carpeta))
+    ruta_parches = cargar_parches("/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_0/"+str(carpeta))
     lista_calificaciones = obtener_calificaciones(ruta_parches)
     cont, list_nombres_parches_aux = filtrar_elementos(ruta_parches,lista_calificaciones, calificacion[i])
     list_nombres_parches.append(list_nombres_parches_aux)
@@ -537,20 +537,20 @@ list_nombres_parches = aplanar_lista(list_nombres_parches)
 list_nombres = sacar_nombre_parche(list_nombres_parches)
 
 print("\n\nEstoy borrando los elementos del csv...")
-ruta_csv = "/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5/train_5.csv"
+ruta_csv = "/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_0/train_0.csv"
 borrar_elementos(list_nombres, ruta_csv)
 print("Elementos borrados.\n\n")
 
 list_dif = calculo_diferencia(list_num_parches_ini,list_num_parches_fin)
 
-ruta_csv_nuevo = "/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5/train_5_filtrado.csv"
+ruta_csv_nuevo = "/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_0/train_0_filtrado.csv"
 i = 0
 while i < len(list_dif): # Recorro la lista de dif
     if list_dif[i] != 0:
         print(f"Aumentando datos en la carpeta {ruta_carpetas[i]}")
         cont = 0
         while cont < list_dif[i]:
-            ruta_parches = cargar_parches("/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_5/"+str(ruta_carpetas[i]))
+            ruta_parches = cargar_parches("/home/nyzcke/Escritorio/Respaldo-main/Filtrado/Train_0/"+str(ruta_carpetas[i]))
             parche_aleatorio = random.choice(ruta_parches)
             lista_angulos = [0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345, 360]
             angulo_aleatorio = random.choice(lista_angulos)
