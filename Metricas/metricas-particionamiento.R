@@ -12,12 +12,18 @@ print(wil_f1)
 
 print("--------------------")
 
-#remotes::install_github("speegled/wilcoxpower")
-library(wilcoxpower)
-powerAcc <- power_wilcox_test(sample_size = 5, p1 = acc1, p2 = acc2)
-print(powerAcc)
+# Otra forma para calcular el poder
+mean_group1 = mean(acc1)
+sd_group1 = sd(acc1)
+mean_group2 = mean(acc2)
+sd_group2 = sd(acc2)
 
-print("--------------------")
+function_group_1 = function(n) {rnorm(n, mean = mean_group1, sd = sd_group1)}
+function_group_2 = function(n) {rnorm(n, mean = mean_group2, sd = sd_group2)}
 
-powerf1 <- power_wilcox_test(sample_size = 5, p1 = f1, p2 = f2)
-print(powerf1)
+library(MKpower)
+sim.power.wilcox.test(nx = 5,  rx = function_group_1, ny = 5, ry = function_group_2, rx.H0 = NULL, ry.H0 = NULL, 
+                      alternative = c("two.sided"), 
+                      sig.level = 0.05, conf.int = FALSE, approximate = FALSE,
+                      ties = TRUE, iter = 10000, nresample = 10000,
+                      parallel = "no", ncpus = 1L, cl = NULL)
